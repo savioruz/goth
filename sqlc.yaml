@@ -1,0 +1,14 @@
+version: "2"
+sql:
+  - name: "postgres"
+    engine: "postgresql"
+    schema: "database/postgres/schema"
+    queries: "database/postgres/query"
+    gen:
+      go:
+        package: "repository"
+        sql_package: "pgx/v5"
+        out: "internal/repository"
+        emit_json_tags: true
+        emit_methods_with_db_argument: true
+        emit_interface: true

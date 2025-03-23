@@ -1,0 +1,13 @@
+.env
+.vscode/
+.idea/
+.builder/
+node_modules/
+dist/
+coverage/
+*.log
+*.log.*
+*.log-*
+*.log/*
+*.log-/*
+*.log-*/
