@@ -9,7 +9,7 @@ import (
 
 type ctxKey string
 
-const requestIDKey ctxKey = "request_id"
+const RequestIDKey ctxKey = "request_id"
 
 func RequestID() fiber.Handler {
 	return func(c *fiber.Ctx) error {
@@ -20,7 +20,7 @@ func RequestID() fiber.Handler {
 
 		c.Set("X-Request-ID", requestID)
 
-		ctx := context.WithValue(c.Context(), requestIDKey, requestID)
+		ctx := context.WithValue(c.Context(), RequestIDKey, requestID)
 		c.SetUserContext(ctx)
 
 		return c.Next()
