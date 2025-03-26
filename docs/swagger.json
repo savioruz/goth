@@ -1,0 +1,243 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a sample server Goth API.",
+        "title": "Goth API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:3000",
+    "basePath": "/v1",
+    "paths": {
+        "/users/login": {
+            "post": {
+                "description": "Login user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Login user",
+                "parameters": [
+                    {
+                        "description": "User login request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_request.UserLoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserLoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_delivery_http_v1.errorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/internal_delivery_http_v1.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_delivery_http_v1.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/register": {
+            "post": {
+                "description": "Register new user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Register new user",
+                "parameters": [
+                    {
+                        "description": "User register request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_request.UserRegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserRegisterResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_delivery_http_v1.errorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/internal_delivery_http_v1.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_delivery_http_v1.errorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_savioruz_goth_internal_dto_request.UserLoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "github_com_savioruz_goth_internal_dto_request.UserRegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "github_com_savioruz_goth_internal_dto_response.Paging": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total_count": {
+                    "type": "integer"
+                },
+                "total_page": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserLoginResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.UserLoginResponse"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.Paging"
+                }
+            }
+        },
+        "github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserRegisterResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.UserRegisterResponse"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.Paging"
+                }
+            }
+        },
+        "github_com_savioruz_goth_internal_dto_response.UserLoginResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_savioruz_goth_internal_dto_response.UserRegisterResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_delivery_http_v1.errorMsg": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_delivery_http_v1.errorResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "$ref": "#/definitions/internal_delivery_http_v1.errorMsg"
+                },
+                "request_id": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
