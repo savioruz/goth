@@ -8,11 +8,33 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type User struct {
+type EmailVerification struct {
 	ID        pgtype.UUID      `json:"id"`
-	Email     string           `json:"email"`
-	Password  string           `json:"password"`
+	UserID    pgtype.UUID      `json:"user_id"`
+	Token     string           `json:"token"`
+	ExpiresAt pgtype.Timestamp `json:"expires_at"`
 	CreatedAt pgtype.Timestamp `json:"created_at"`
-	UpdatedAt pgtype.Timestamp `json:"updated_at"`
-	DeletedAt pgtype.Timestamp `json:"deleted_at"`
+}
+
+type PasswordReset struct {
+	ID        pgtype.UUID      `json:"id"`
+	UserID    pgtype.UUID      `json:"user_id"`
+	Token     string           `json:"token"`
+	ExpiresAt pgtype.Timestamp `json:"expires_at"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
+}
+
+type User struct {
+	ID           pgtype.UUID      `json:"id"`
+	Email        string           `json:"email"`
+	Password     pgtype.Text      `json:"password"`
+	Level        string           `json:"level"`
+	GoogleID     pgtype.Text      `json:"google_id"`
+	FullName     pgtype.Text      `json:"full_name"`
+	ProfileImage pgtype.Text      `json:"profile_image"`
+	IsVerified   pgtype.Bool      `json:"is_verified"`
+	LastLogin    pgtype.Timestamp `json:"last_login"`
+	CreatedAt    pgtype.Timestamp `json:"created_at"`
+	UpdatedAt    pgtype.Timestamp `json:"updated_at"`
+	DeletedAt    pgtype.Timestamp `json:"deleted_at"`
 }

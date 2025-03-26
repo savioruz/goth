@@ -11,11 +11,16 @@ import (
 )
 
 type Querier interface {
+	CreateEmailVerification(ctx context.Context, db DBTX, arg CreateEmailVerificationParams) (EmailVerification, error)
+	CreatePasswordReset(ctx context.Context, db DBTX, arg CreatePasswordResetParams) (PasswordReset, error)
 	CreateUser(ctx context.Context, db DBTX, arg CreateUserParams) (User, error)
-	DeleteUser(ctx context.Context, db DBTX, id pgtype.UUID) (User, error)
-	GetUser(ctx context.Context, db DBTX, email string) (User, error)
-	ListUsers(ctx context.Context, db DBTX) ([]User, error)
+	GetEmailVerificationByToken(ctx context.Context, db DBTX, token string) (EmailVerification, error)
+	GetPasswordResetByToken(ctx context.Context, db DBTX, token string) (PasswordReset, error)
+	GetUserByEmail(ctx context.Context, db DBTX, email string) (User, error)
+	ResetPassword(ctx context.Context, db DBTX, arg ResetPasswordParams) (User, error)
+	UpdateLastLogin(ctx context.Context, db DBTX, id pgtype.UUID) (pgtype.UUID, error)
 	UpdateUser(ctx context.Context, db DBTX, arg UpdateUserParams) (User, error)
+	VerifyEmail(ctx context.Context, db DBTX, id pgtype.UUID) (User, error)
 }
 
 var _ Querier = (*Queries)(nil)

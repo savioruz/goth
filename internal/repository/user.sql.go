@@ -11,22 +11,85 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createEmailVerification = `-- name: CreateEmailVerification :one
+INSERT INTO email_verifications (user_id, token) VALUES ($1, $2) RETURNING id, user_id, token, expires_at, created_at
+`
+
+type CreateEmailVerificationParams struct {
+	UserID pgtype.UUID `json:"user_id"`
+	Token  string      `json:"token"`
+}
+
+func (q *Queries) CreateEmailVerification(ctx context.Context, db DBTX, arg CreateEmailVerificationParams) (EmailVerification, error) {
+	row := db.QueryRow(ctx, createEmailVerification, arg.UserID, arg.Token)
+	var i EmailVerification
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Token,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createPasswordReset = `-- name: CreatePasswordReset :one
+INSERT INTO password_resets (user_id, token) VALUES ($1, $2) RETURNING id, user_id, token, expires_at, created_at
+`
+
+type CreatePasswordResetParams struct {
+	UserID pgtype.UUID `json:"user_id"`
+	Token  string      `json:"token"`
+}
+
+func (q *Queries) CreatePasswordReset(ctx context.Context, db DBTX, arg CreatePasswordResetParams) (PasswordReset, error) {
+	row := db.QueryRow(ctx, createPasswordReset, arg.UserID, arg.Token)
+	var i PasswordReset
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Token,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email, password, created_at, updated_at, deleted_at
+INSERT INTO users (email, password, level, google_id, full_name, profile_image, is_verified) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, password, level, google_id, full_name, profile_image, is_verified, last_login, created_at, updated_at, deleted_at
 `
 
 type CreateUserParams struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email        string      `json:"email"`
+	Password     pgtype.Text `json:"password"`
+	Level        string      `json:"level"`
+	GoogleID     pgtype.Text `json:"google_id"`
+	FullName     pgtype.Text `json:"full_name"`
+	ProfileImage pgtype.Text `json:"profile_image"`
+	IsVerified   pgtype.Bool `json:"is_verified"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, db DBTX, arg CreateUserParams) (User, error) {
-	row := db.QueryRow(ctx, createUser, arg.Email, arg.Password)
+	row := db.QueryRow(ctx, createUser,
+		arg.Email,
+		arg.Password,
+		arg.Level,
+		arg.GoogleID,
+		arg.FullName,
+		arg.ProfileImage,
+		arg.IsVerified,
+	)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
 		&i.Password,
+		&i.Level,
+		&i.GoogleID,
+		&i.FullName,
+		&i.ProfileImage,
+		&i.IsVerified,
+		&i.LastLogin,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -34,17 +97,57 @@ func (q *Queries) CreateUser(ctx context.Context, db DBTX, arg CreateUserParams)
 	return i, err
 }
 
-const deleteUser = `-- name: DeleteUser :one
-UPDATE users SET deleted_at = now() WHERE id = $1 AND deleted_at IS NULL RETURNING id, email, password, created_at, updated_at, deleted_at
+const getEmailVerificationByToken = `-- name: GetEmailVerificationByToken :one
+SELECT id, user_id, token, expires_at, created_at FROM email_verifications WHERE token = $1 AND expires_at > now() LIMIT 1
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, db DBTX, id pgtype.UUID) (User, error) {
-	row := db.QueryRow(ctx, deleteUser, id)
+func (q *Queries) GetEmailVerificationByToken(ctx context.Context, db DBTX, token string) (EmailVerification, error) {
+	row := db.QueryRow(ctx, getEmailVerificationByToken, token)
+	var i EmailVerification
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Token,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getPasswordResetByToken = `-- name: GetPasswordResetByToken :one
+SELECT id, user_id, token, expires_at, created_at FROM password_resets WHERE token = $1 AND expires_at > now() LIMIT 1
+`
+
+func (q *Queries) GetPasswordResetByToken(ctx context.Context, db DBTX, token string) (PasswordReset, error) {
+	row := db.QueryRow(ctx, getPasswordResetByToken, token)
+	var i PasswordReset
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Token,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, email, password, level, google_id, full_name, profile_image, is_verified, last_login, created_at, updated_at, deleted_at FROM users WHERE email = $1 AND deleted_at IS NULL LIMIT 1
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, db DBTX, email string) (User, error) {
+	row := db.QueryRow(ctx, getUserByEmail, email)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
 		&i.Password,
+		&i.Level,
+		&i.GoogleID,
+		&i.FullName,
+		&i.ProfileImage,
+		&i.IsVerified,
+		&i.LastLogin,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -52,17 +155,28 @@ func (q *Queries) DeleteUser(ctx context.Context, db DBTX, id pgtype.UUID) (User
 	return i, err
 }
 
-const getUser = `-- name: GetUser :one
-SELECT id, email, password, created_at, updated_at, deleted_at FROM users WHERE email = $1 AND deleted_at IS NULL LIMIT 1
+const resetPassword = `-- name: ResetPassword :one
+UPDATE users SET password = $1 WHERE id = $2 AND deleted_at IS NULL RETURNING id, email, password, level, google_id, full_name, profile_image, is_verified, last_login, created_at, updated_at, deleted_at
 `
 
-func (q *Queries) GetUser(ctx context.Context, db DBTX, email string) (User, error) {
-	row := db.QueryRow(ctx, getUser, email)
+type ResetPasswordParams struct {
+	Password pgtype.Text `json:"password"`
+	ID       pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) ResetPassword(ctx context.Context, db DBTX, arg ResetPasswordParams) (User, error) {
+	row := db.QueryRow(ctx, resetPassword, arg.Password, arg.ID)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
 		&i.Password,
+		&i.Level,
+		&i.GoogleID,
+		&i.FullName,
+		&i.ProfileImage,
+		&i.IsVerified,
+		&i.LastLogin,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -70,54 +184,76 @@ func (q *Queries) GetUser(ctx context.Context, db DBTX, email string) (User, err
 	return i, err
 }
 
-const listUsers = `-- name: ListUsers :many
-SELECT id, email, password, created_at, updated_at, deleted_at FROM users WHERE deleted_at IS NULL ORDER BY created_at DESC
+const updateLastLogin = `-- name: UpdateLastLogin :one
+UPDATE users SET last_login = now() WHERE id = $1 AND deleted_at IS NULL RETURNING id
 `
 
-func (q *Queries) ListUsers(ctx context.Context, db DBTX) ([]User, error) {
-	rows, err := db.Query(ctx, listUsers)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []User
-	for rows.Next() {
-		var i User
-		if err := rows.Scan(
-			&i.ID,
-			&i.Email,
-			&i.Password,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) UpdateLastLogin(ctx context.Context, db DBTX, id pgtype.UUID) (pgtype.UUID, error) {
+	row := db.QueryRow(ctx, updateLastLogin, id)
+	err := row.Scan(&id)
+	return id, err
 }
 
 const updateUser = `-- name: UpdateUser :one
-UPDATE users SET email = $2, password = $3 WHERE id = $1 AND deleted_at IS NULL RETURNING id, email, password, created_at, updated_at, deleted_at
+UPDATE users SET email = $1, password = $2, google_id = $3, full_name = $4, profile_image = $5, is_verified = $6, updated_at = now()
+    WHERE id = $7 AND deleted_at IS NULL RETURNING id, email, password, level, google_id, full_name, profile_image, is_verified, last_login, created_at, updated_at, deleted_at
 `
 
 type UpdateUserParams struct {
-	ID       pgtype.UUID `json:"id"`
-	Email    string      `json:"email"`
-	Password string      `json:"password"`
+	Email        string      `json:"email"`
+	Password     pgtype.Text `json:"password"`
+	GoogleID     pgtype.Text `json:"google_id"`
+	FullName     pgtype.Text `json:"full_name"`
+	ProfileImage pgtype.Text `json:"profile_image"`
+	IsVerified   pgtype.Bool `json:"is_verified"`
+	ID           pgtype.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, db DBTX, arg UpdateUserParams) (User, error) {
-	row := db.QueryRow(ctx, updateUser, arg.ID, arg.Email, arg.Password)
+	row := db.QueryRow(ctx, updateUser,
+		arg.Email,
+		arg.Password,
+		arg.GoogleID,
+		arg.FullName,
+		arg.ProfileImage,
+		arg.IsVerified,
+		arg.ID,
+	)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
 		&i.Password,
+		&i.Level,
+		&i.GoogleID,
+		&i.FullName,
+		&i.ProfileImage,
+		&i.IsVerified,
+		&i.LastLogin,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const verifyEmail = `-- name: VerifyEmail :one
+UPDATE users SET is_verified = true WHERE id = $1 AND deleted_at IS NULL RETURNING id, email, password, level, google_id, full_name, profile_image, is_verified, last_login, created_at, updated_at, deleted_at
+`
+
+func (q *Queries) VerifyEmail(ctx context.Context, db DBTX, id pgtype.UUID) (User, error) {
+	row := db.QueryRow(ctx, verifyEmail, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Password,
+		&i.Level,
+		&i.GoogleID,
+		&i.FullName,
+		&i.ProfileImage,
+		&i.IsVerified,
+		&i.LastLogin,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
