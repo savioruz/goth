@@ -8,10 +8,13 @@ import (
 
 type (
 	Config struct {
-		App  App
-		HTTP HTTP
-		Log  Log
-		Pg   Pg
+		App     App
+		HTTP    HTTP
+		Log     Log
+		Pg      Pg
+		Redis   Redis
+		Swagger Swagger
+		JWT     JWT
 	}
 
 	App struct {
@@ -35,6 +38,23 @@ type (
 		Password string `env:"PG_PASSWORD"`
 		Dbname   string `env:"PG_DATABASE,required"`
 		SSLMode  string `env:"PG_SSLMODE,required"`
+	}
+
+	Redis struct {
+		Host     string `env:"REDIS_HOST,required"`
+		Port     int    `env:"REDIS_PORT,required"`
+		Password string `env:"REDIS_PASSWORD"`
+		DB       int    `env:"REDIS_DB"`
+	}
+
+	Swagger struct {
+		Enabled bool `env:"SWAGGER_ENABLED" envDefault:"false"`
+	}
+
+	JWT struct {
+		Secret             string `env:"JWT_SECRET,required"`
+		AccessTokenExpiry  string `env:"JWT_ACCESS_TOKEN_EXPIRY" envDefault:"24h"`
+		RefreshTokenExpiry string `env:"JWT_REFRESH_TOKEN_EXPIRY" envDefault:"7d"`
 	}
 )
 

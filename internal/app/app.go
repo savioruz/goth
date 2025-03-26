@@ -11,13 +11,19 @@ import (
 	v1 "github.com/savioruz/goth/internal/delivery/http"
 	"github.com/savioruz/goth/internal/service"
 	"github.com/savioruz/goth/pkg/httpserver"
+	"github.com/savioruz/goth/pkg/jwt"
 	"github.com/savioruz/goth/pkg/logger"
 	"github.com/savioruz/goth/pkg/postgres"
+	"github.com/savioruz/goth/pkg/redis"
 )
 
 func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
 
+	// JWT
+	jwt.Initialize(cfg.JWT.Secret, jwt.ParseDuration(cfg.JWT.AccessTokenExpiry), jwt.ParseDuration(cfg.JWT.RefreshTokenExpiry))
+
+	// Postgres
 	dsn := postgres.ConnectionBuilder(cfg.Pg.Host, cfg.Pg.Port, cfg.Pg.User, cfg.Pg.Password, cfg.Pg.Dbname, cfg.Pg.SSLMode)
 	pg, err := postgres.New(dsn, postgres.MaxPoolSize(cfg.Pg.PoolMax))
 	if err != nil {
@@ -27,6 +33,18 @@ func Run(cfg *config.Config) {
 
 	if err := pg.Ping(context.Background()); err != nil {
 		l.Fatal(fmt.Errorf("app - Run - postgres.Ping: %w", err))
+	}
+
+	// Redis
+	addr := fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port)
+	redis, err := redis.New(addr, cfg.Redis.Password, cfg.Redis.DB)
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - redis.New: %w", err))
+	}
+	defer redis.Close()
+
+	if err := redis.Ping(context.Background()); err != nil {
+		l.Fatal(fmt.Errorf("app - Run - redis.Ping: %w", err))
 	}
 
 	// Service
