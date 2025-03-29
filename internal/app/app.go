@@ -13,6 +13,7 @@ import (
 	"github.com/savioruz/goth/pkg/httpserver"
 	"github.com/savioruz/goth/pkg/jwt"
 	"github.com/savioruz/goth/pkg/logger"
+	"github.com/savioruz/goth/pkg/oauth"
 	"github.com/savioruz/goth/pkg/postgres"
 	"github.com/savioruz/goth/pkg/redis"
 )
@@ -47,8 +48,11 @@ func Run(cfg *config.Config) {
 		l.Fatal(fmt.Errorf("app - Run - redis.Ping: %w", err))
 	}
 
+	// OAuth
+	googleProvider := oauth.NewGoogleProvider(cfg.OAuth.Google.ClientID, cfg.OAuth.Google.ClientSecret, cfg.OAuth.Google.RedirectURL)
+
 	// Service
-	serviceFactory := service.NewFactory(pg.Pool, l)
+	serviceFactory := service.NewFactory(pg.Pool, l, googleProvider)
 	services := serviceFactory.NewServices()
 
 	// HTTP Server

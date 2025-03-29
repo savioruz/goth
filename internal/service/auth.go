@@ -17,6 +17,7 @@ import (
 type AuthService interface {
 	Register(ctx context.Context, req request.UserRegisterRequest) (*response.UserRegisterResponse, error)
 	Login(ctx context.Context, req request.UserLoginRequest) (*response.UserLoginResponse, error)
+	Profile(ctx context.Context, email string) (*response.UserProfileResponse, error)
 }
 
 type authService struct {
@@ -126,5 +127,18 @@ func (s *authService) Login(ctx context.Context, req request.UserLoginRequest) (
 	return &response.UserLoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (s *authService) Profile(ctx context.Context, email string) (*response.UserProfileResponse, error) {
+	user, err := s.q.GetUserByEmail(ctx, s.db, email)
+	if err != nil {
+		return nil, fmt.Errorf("Profile - service - failed to get user by id: %w", err)
+	}
+
+	return &response.UserProfileResponse{
+		Email:        user.Email,
+		Name:         user.FullName.String,
+		ProfileImage: user.ProfileImage.String,
 	}, nil
 }

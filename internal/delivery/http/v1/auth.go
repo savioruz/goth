@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/savioruz/goth/internal/delivery/http/middleware"
 	"github.com/savioruz/goth/internal/dto/request"
 	"github.com/savioruz/goth/internal/dto/response"
 	"github.com/savioruz/goth/internal/service"
@@ -13,18 +14,24 @@ import (
 )
 
 type authRoutes struct {
-	u service.AuthService
+	a service.AuthService
+	o service.OAuthService
 	l logger.Interface
 	v *validator.Validate
 }
 
-func NewAuthRoutes(group fiber.Router, l logger.Interface, u service.AuthService) {
-	r := &authRoutes{u, l, validator.New(validator.WithRequiredStructEnabled())}
+func NewAuthRoutes(group fiber.Router, l logger.Interface, u service.AuthService, o service.OAuthService) {
+	r := &authRoutes{u, o, l, validator.New(validator.WithRequiredStructEnabled())}
 
-	userGroup := group.Group("/auth")
+	authGroup := group.Group("/auth")
 	{
-		userGroup.Post("/register", r.Register)
-		userGroup.Post("/login", r.Login)
+		authGroup.Post("/register", r.Register)
+		authGroup.Post("/login", r.Login)
+		authGroup.Get("/google/login", r.GoogleLogin)
+		authGroup.Get("/google/callback", r.GoogleCallback)
+
+		// Private routes
+		authGroup.Get("/profile", middleware.Jwt(), r.Profile)
 	}
 }
 
@@ -49,7 +56,7 @@ func (r *authRoutes) Register(ctx *fiber.Ctx) error {
 		return response.NewErrorValidationResponse(ctx, err)
 	}
 
-	data, err := r.u.Register(ctx.UserContext(), req)
+	data, err := r.a.Register(ctx.UserContext(), req)
 	if err != nil {
 		if strings.Contains(err.Error(), fmt.Sprintf("user with email %s already exist", req.Email)) {
 			return response.NewErrorResponse(ctx, fiber.StatusConflict, response.ErrorMsg{"CONFLICT": {"user already exist"}})
@@ -89,7 +96,7 @@ func (r *authRoutes) Login(ctx *fiber.Ctx) error {
 		return response.NewErrorValidationResponse(ctx, err)
 	}
 
-	data, err := r.u.Login(ctx.UserContext(), req)
+	data, err := r.a.Login(ctx.UserContext(), req)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			return response.NewErrorResponse(ctx, fiber.StatusBadRequest, response.ErrorMsg{"NOT_FOUND": {"user not found"}})
@@ -108,6 +115,83 @@ func (r *authRoutes) Login(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(
+		response.NewResponse(data, nil),
+	)
+}
+
+// GoogleLogin godoc
+// @Summary Login with Google
+// @Description Redirects to Google OAuth consent screen
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Success 302 {string} string "Redirect to Google"
+// @Failure 500 {object} response.ErrorResponse
+// @Router /auth/google/login [get]
+func (r *authRoutes) GoogleLogin(c *fiber.Ctx) error {
+	url := r.o.GetGoogleAuthURL()
+	return c.Redirect(url)
+}
+
+// GoogleCallback godoc
+// @Summary Google OAuth callback
+// @Description Handle the Google OAuth callback and return JWT tokens
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param code query string true "Authorization code from Google"
+// @Success 200 {object} response.Response[response.UserLoginResponse]
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /auth/google/callback [get]
+func (r *authRoutes) GoogleCallback(c *fiber.Ctx) error {
+	code := c.Query("code")
+	if code == "" {
+		return response.NewErrorResponse(c, fiber.StatusBadRequest, response.ErrorMsg{"CODE": {"missing authorization code"}})
+	}
+
+	data, err := r.o.HandleGoogleCallback(c.Context(), code)
+	if err != nil {
+		if strings.Contains(err.Error(), "failed to exchange code") {
+			return response.NewErrorResponse(c, fiber.StatusBadRequest, response.ErrorMsg{"CODE": {"invalid authorization code"}})
+		}
+
+		reqID := "unknown"
+		if id, ok := c.Locals("request_id").(string); ok {
+			reqID = id
+		}
+		r.l.Error("http - v1 - auth - google callback - request_id: " + reqID + " - " + err.Error())
+		return response.NewErrorResponse(c, fiber.StatusInternalServerError, response.ErrorMsg{"SERVER": {"failed to process OAuth callback"}})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(
+		response.NewResponse(data, nil),
+	)
+}
+
+// Profile godoc
+// @Summary Get user profile
+// @Description Get user profile
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Success 200 {object} response.Response[response.UserProfileResponse]
+// @Failure 500 {object} response.ErrorResponse
+// @Router /auth/profile [get]
+// @Security BearerAuth
+func (r *authRoutes) Profile(ctx *fiber.Ctx) error {
+	email := ctx.Locals("email").(string)
+	data, err := r.a.Profile(ctx.UserContext(), email)
+	if err != nil {
+		reqID := "unknown"
+		if id, ok := ctx.Locals("request_id").(string); ok {
+			reqID = id
+		}
+		r.l.Error("http - v1 - auth - profile - request_id: " + reqID + " - " + err.Error())
+		return response.NewErrorResponse(ctx, fiber.StatusInternalServerError, response.ErrorMsg{"SERVER": {"failed to get profile"}})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(
 		response.NewResponse(data, nil),
 	)
 }
