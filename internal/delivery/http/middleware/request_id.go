@@ -1,8 +1,6 @@
 package middleware
 
 import (
-	"context"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -19,9 +17,7 @@ func RequestID() fiber.Handler {
 		}
 
 		c.Set("X-Request-ID", requestID)
-
-		ctx := context.WithValue(c.Context(), RequestIDKey, requestID)
-		c.SetUserContext(ctx)
+		c.Locals("request_id", requestID)
 
 		return c.Next()
 	}

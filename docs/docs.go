@@ -49,19 +49,47 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_delivery_http_v1.errorResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/internal_delivery_http_v1.errorResponse"
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_delivery_http_v1.errorResponse"
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get user profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get user profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserProfileResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse"
                         }
                     }
                 }
@@ -101,19 +129,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/internal_delivery_http_v1.errorResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/internal_delivery_http_v1.errorResponse"
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/internal_delivery_http_v1.errorResponse"
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse"
                         }
                     }
                 }
@@ -157,6 +179,26 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_savioruz_goth_internal_dto_response.ErrorMsg": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_savioruz_goth_internal_dto_response.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorMsg"
+                },
+                "request_id": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_savioruz_goth_internal_dto_response.Paging": {
             "type": "object",
             "properties": {
@@ -185,6 +227,17 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserProfileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.UserProfileResponse"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.Paging"
+                }
+            }
+        },
         "github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserRegisterResponse": {
             "type": "object",
             "properties": {
@@ -207,6 +260,20 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_savioruz_goth_internal_dto_response.UserProfileResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profile_image": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_savioruz_goth_internal_dto_response.UserRegisterResponse": {
             "type": "object",
             "properties": {
@@ -214,26 +281,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_delivery_http_v1.errorMsg": {
-            "type": "object",
-            "additionalProperties": {
-                "type": "array",
-                "items": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_delivery_http_v1.errorResponse": {
-            "type": "object",
-            "properties": {
-                "errors": {
-                    "$ref": "#/definitions/internal_delivery_http_v1.errorMsg"
-                },
-                "request_id": {
                     "type": "string"
                 }
             }

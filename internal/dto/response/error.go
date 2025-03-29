@@ -1,31 +1,30 @@
-package v1
+package response
 
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/savioruz/goth/internal/delivery/http/middleware"
 )
 
-type errorMsg map[string][]string
+type ErrorMsg map[string][]string
 
-type errorResponse struct {
+type ErrorResponse struct {
 	RequestID string   `json:"request_id,omitempty"`
-	Errors    errorMsg `json:"errors"`
+	Errors    ErrorMsg `json:"errors"`
 }
 
-func newErrorResponse(c *fiber.Ctx, code int, errors errorMsg) error {
+func NewErrorResponse(c *fiber.Ctx, code int, errors ErrorMsg) error {
 	if len(errors) == 0 {
-		return c.Status(code).JSON(errorResponse{
-			Errors: errorMsg{"error": {"something went wrong"}},
+		return c.Status(code).JSON(ErrorResponse{
+			Errors: ErrorMsg{"error": {"something went wrong"}},
 		})
 	}
 
-	res := errorResponse{
+	res := ErrorResponse{
 		Errors: errors,
 	}
 
 	if code >= 500 {
-		if reqID, ok := c.UserContext().Value(middleware.RequestIDKey).(string); ok {
+		if reqID, ok := c.Locals("request_id").(string); ok {
 			res.RequestID = reqID
 		}
 	}
@@ -33,26 +32,26 @@ func newErrorResponse(c *fiber.Ctx, code int, errors errorMsg) error {
 	return c.Status(code).JSON(res)
 }
 
-func newErrorValidationResponse(c *fiber.Ctx, err error) error {
+func NewErrorValidationResponse(c *fiber.Ctx, err error) error {
 	if err == nil {
 		return nil
 	}
 
 	validationErrors, ok := err.(validator.ValidationErrors)
 	if !ok {
-		return newErrorResponse(c, fiber.StatusBadRequest, errorMsg{
+		return NewErrorResponse(c, fiber.StatusBadRequest, ErrorMsg{
 			"validation": {err.Error()},
 		})
 	}
 
-	fieldErrors := make(errorMsg)
+	fieldErrors := make(ErrorMsg)
 	for _, e := range validationErrors {
 		field := e.Field()
 		message := getValidationMessage(e.Tag())
 		fieldErrors[field] = append(fieldErrors[field], message)
 	}
 
-	return newErrorResponse(c, fiber.StatusUnprocessableEntity, fieldErrors)
+	return NewErrorResponse(c, fiber.StatusUnprocessableEntity, fieldErrors)
 }
 
 func getValidationMessage(tag string) string {

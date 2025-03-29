@@ -25,6 +25,19 @@ definitions:
     - name
     - password
     type: object
+  github_com_savioruz_goth_internal_dto_response.ErrorMsg:
+    additionalProperties:
+      items:
+        type: string
+      type: array
+    type: object
+  github_com_savioruz_goth_internal_dto_response.ErrorResponse:
+    properties:
+      errors:
+        $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorMsg'
+      request_id:
+        type: string
+    type: object
   github_com_savioruz_goth_internal_dto_response.Paging:
     properties:
       limit:
@@ -43,6 +56,13 @@ definitions:
       pagination:
         $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.Paging'
     type: object
+  github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserProfileResponse:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.UserProfileResponse'
+      pagination:
+        $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.Paging'
+    type: object
   github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserRegisterResponse:
     properties:
       data:
@@ -57,24 +77,20 @@ definitions:
       refresh_token:
         type: string
     type: object
+  github_com_savioruz_goth_internal_dto_response.UserProfileResponse:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      profile_image:
+        type: string
+    type: object
   github_com_savioruz_goth_internal_dto_response.UserRegisterResponse:
     properties:
       email:
         type: string
       id:
-        type: string
-    type: object
-  internal_delivery_http_v1.errorMsg:
-    additionalProperties:
-      items:
-        type: string
-      type: array
-    type: object
-  internal_delivery_http_v1.errorResponse:
-    properties:
-      errors:
-        $ref: '#/definitions/internal_delivery_http_v1.errorMsg'
-      request_id:
         type: string
     type: object
 host: localhost:3000
@@ -106,16 +122,33 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_delivery_http_v1.errorResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/internal_delivery_http_v1.errorResponse'
+            $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_delivery_http_v1.errorResponse'
+            $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse'
       summary: Login user
+      tags:
+      - user
+  /users/profile:
+    get:
+      consumes:
+      - application/json
+      description: Get user profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserProfileResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user profile
       tags:
       - user
   /users/register:
@@ -140,15 +173,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_delivery_http_v1.errorResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/internal_delivery_http_v1.errorResponse'
+            $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_delivery_http_v1.errorResponse'
+            $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse'
       summary: Register new user
       tags:
       - user

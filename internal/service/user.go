@@ -17,6 +17,7 @@ import (
 type UserService interface {
 	Register(ctx context.Context, req request.UserRegisterRequest) (*response.UserRegisterResponse, error)
 	Login(ctx context.Context, req request.UserLoginRequest) (*response.UserLoginResponse, error)
+	Profile(ctx context.Context, email string) (*response.UserProfileResponse, error)
 }
 
 type userService struct {
@@ -126,5 +127,28 @@ func (s *userService) Login(ctx context.Context, req request.UserLoginRequest) (
 	return &response.UserLoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (s *userService) Profile(ctx context.Context, email string) (*response.UserProfileResponse, error) {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Profile - service - failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	user, err := s.q.GetUserByEmail(ctx, tx, email)
+	if err != nil && err != pgx.ErrNoRows {
+		return nil, fmt.Errorf("Profile - service - failed to get user by id: %w", err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("Profile - service - failed to commit transaction: %w", err)
+	}
+
+	return &response.UserProfileResponse{
+		Email:        user.Email,
+		Name:         user.FullName.String,
+		ProfileImage: user.ProfileImage.String,
 	}, nil
 }
