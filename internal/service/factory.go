@@ -15,11 +15,11 @@ func NewFactory(db *pgxpool.Pool, l logger.Interface) *Factory {
 }
 
 type Services struct {
-	UserService UserService
+	AuthService AuthService
 }
 
 func (f *Factory) NewServices() *Services {
 	return &Services{
-		UserService: NewUserService(f.db),
+		AuthService: NewAuthService(f.db),
 	}
 }

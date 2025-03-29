@@ -14,25 +14,24 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserService interface {
+type AuthService interface {
 	Register(ctx context.Context, req request.UserRegisterRequest) (*response.UserRegisterResponse, error)
 	Login(ctx context.Context, req request.UserLoginRequest) (*response.UserLoginResponse, error)
-	Profile(ctx context.Context, email string) (*response.UserProfileResponse, error)
 }
 
-type userService struct {
+type authService struct {
 	db *pgxpool.Pool
 	q  *repository.Queries
 }
 
-func NewUserService(db *pgxpool.Pool) UserService {
-	return &userService{
+func NewAuthService(db *pgxpool.Pool) AuthService {
+	return &authService{
 		db: db,
 		q:  repository.New(),
 	}
 }
 
-func (s *userService) Register(ctx context.Context, req request.UserRegisterRequest) (*response.UserRegisterResponse, error) {
+func (s *authService) Register(ctx context.Context, req request.UserRegisterRequest) (*response.UserRegisterResponse, error) {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Register - service - failed to begin transaction: %w", err)
@@ -83,7 +82,7 @@ func (s *userService) Register(ctx context.Context, req request.UserRegisterRequ
 	}, nil
 }
 
-func (s *userService) Login(ctx context.Context, req request.UserLoginRequest) (*response.UserLoginResponse, error) {
+func (s *authService) Login(ctx context.Context, req request.UserLoginRequest) (*response.UserLoginResponse, error) {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Login - service - failed to begin transaction: %w", err)
@@ -127,28 +126,5 @@ func (s *userService) Login(ctx context.Context, req request.UserLoginRequest) (
 	return &response.UserLoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-	}, nil
-}
-
-func (s *userService) Profile(ctx context.Context, email string) (*response.UserProfileResponse, error) {
-	tx, err := s.db.Begin(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("Profile - service - failed to begin transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
-	user, err := s.q.GetUserByEmail(ctx, tx, email)
-	if err != nil && err != pgx.ErrNoRows {
-		return nil, fmt.Errorf("Profile - service - failed to get user by id: %w", err)
-	}
-
-	if err = tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("Profile - service - failed to commit transaction: %w", err)
-	}
-
-	return &response.UserProfileResponse{
-		Email:        user.Email,
-		Name:         user.FullName.String,
-		ProfileImage: user.ProfileImage.String,
 	}, nil
 }

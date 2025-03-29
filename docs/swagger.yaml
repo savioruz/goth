@@ -3,6 +3,7 @@ definitions:
   github_com_savioruz_goth_internal_dto_request.UserLoginRequest:
     properties:
       email:
+        example: string@gmail.com
         type: string
       password:
         minLength: 8
@@ -14,6 +15,7 @@ definitions:
   github_com_savioruz_goth_internal_dto_request.UserRegisterRequest:
     properties:
       email:
+        example: string@gmail.com
         type: string
       name:
         type: string
@@ -56,13 +58,6 @@ definitions:
       pagination:
         $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.Paging'
     type: object
-  github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserProfileResponse:
-    properties:
-      data:
-        $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.UserProfileResponse'
-      pagination:
-        $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.Paging'
-    type: object
   github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserRegisterResponse:
     properties:
       data:
@@ -75,15 +70,6 @@ definitions:
       access_token:
         type: string
       refresh_token:
-        type: string
-    type: object
-  github_com_savioruz_goth_internal_dto_response.UserProfileResponse:
-    properties:
-      email:
-        type: string
-      name:
-        type: string
-      profile_image:
         type: string
     type: object
   github_com_savioruz_goth_internal_dto_response.UserRegisterResponse:
@@ -100,11 +86,11 @@ info:
   title: Goth API
   version: "1.0"
 paths:
-  /users/login:
+  /auth/login:
     post:
       consumes:
       - application/json
-      description: Login user
+      description: Login user with email and password
       parameters:
       - description: User login request
         in: body
@@ -129,33 +115,12 @@ paths:
             $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse'
       summary: Login user
       tags:
-      - user
-  /users/profile:
-    get:
-      consumes:
-      - application/json
-      description: Get user profile
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserProfileResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get user profile
-      tags:
-      - user
-  /users/register:
+      - auth
+  /auth/register:
     post:
       consumes:
       - application/json
-      description: Register new user
+      description: Register new user with email and password
       parameters:
       - description: User register request
         in: body
@@ -180,7 +145,7 @@ paths:
             $ref: '#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse'
       summary: Register new user
       tags:
-      - user
+      - auth
 securityDefinitions:
   BearerAuth:
     in: header

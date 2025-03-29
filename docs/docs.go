@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/users/login": {
+        "/auth/login": {
             "post": {
-                "description": "Login user",
+                "description": "Login user with email and password",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,7 +25,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "auth"
                 ],
                 "summary": "Login user",
                 "parameters": [
@@ -61,43 +61,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/profile": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get user profile",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Get user profile",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserProfileResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/register": {
+        "/auth/register": {
             "post": {
-                "description": "Register new user",
+                "description": "Register new user with email and password",
                 "consumes": [
                     "application/json"
                 ],
@@ -105,7 +71,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "auth"
                 ],
                 "summary": "Register new user",
                 "parameters": [
@@ -151,7 +117,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "string@gmail.com"
                 },
                 "password": {
                     "type": "string",
@@ -168,7 +135,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "string@gmail.com"
                 },
                 "name": {
                     "type": "string"
@@ -227,17 +195,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserProfileResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.UserProfileResponse"
-                },
-                "pagination": {
-                    "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.Paging"
-                }
-            }
-        },
         "github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserRegisterResponse": {
             "type": "object",
             "properties": {
@@ -256,20 +213,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_savioruz_goth_internal_dto_response.UserProfileResponse": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "profile_image": {
                     "type": "string"
                 }
             }
