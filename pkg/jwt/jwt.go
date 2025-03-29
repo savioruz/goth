@@ -14,14 +14,16 @@ var (
 )
 
 type JWT struct {
+	appName            string
 	secretKey          string
 	accessTokenExpiry  time.Duration
 	refreshTokenExpiry time.Duration
 }
 
-func Initialize(secretKey string, accessExpiry, refreshExpiry time.Duration) {
+func Initialize(appName string, secretKey string, accessExpiry, refreshExpiry time.Duration) {
 	once.Do(func() {
 		instance = &JWT{
+			appName:            appName,
 			secretKey:          secretKey,
 			accessTokenExpiry:  accessExpiry,
 			refreshTokenExpiry: refreshExpiry,
@@ -69,7 +71,7 @@ func (j *JWT) generateToken(userID, email, level string, expiry time.Duration, t
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "goth",
+			Issuer:    j.appName,
 			Subject:   userID,
 		},
 	}

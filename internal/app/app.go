@@ -21,7 +21,7 @@ func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
 
 	// JWT
-	jwt.Initialize(cfg.JWT.Secret, jwt.ParseDuration(cfg.JWT.AccessTokenExpiry), jwt.ParseDuration(cfg.JWT.RefreshTokenExpiry))
+	jwt.Initialize(cfg.App.Name, cfg.JWT.Secret, jwt.ParseDuration(cfg.JWT.AccessTokenExpiry), jwt.ParseDuration(cfg.JWT.RefreshTokenExpiry))
 
 	// Postgres
 	dsn := postgres.ConnectionBuilder(cfg.Pg.Host, cfg.Pg.Port, cfg.Pg.User, cfg.Pg.Password, cfg.Pg.Dbname, cfg.Pg.SSLMode)
