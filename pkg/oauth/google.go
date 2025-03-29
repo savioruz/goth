@@ -41,7 +41,7 @@ func (p *GoogleProvider) GetAuthURL() string {
 }
 
 func (p *GoogleProvider) Exchange(code string) (*oauth2.Token, error) {
-	return p.config.Exchange(oauth2.NoContext, code)
+	return p.config.Exchange(context.Background(), code)
 }
 
 func (p *GoogleProvider) GetUserInfo(token *oauth2.Token) (*GoogleUserInfo, error) {
