@@ -33,7 +33,7 @@ func NewRouter(app *fiber.App, cfg *config.Config, l logger.Interface, s service
 
 	apiV1Group := app.Group("/v1")
 	{
-		v1.NewUserRoutes(apiV1Group, l, s.UserService)
+		v1.NewAuthRoutes(apiV1Group, l, s.AuthService, s.OAuthService)
 	}
 
 	app.Use("*", func(c *fiber.Ctx) error {

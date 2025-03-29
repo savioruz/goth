@@ -15,6 +15,7 @@ type (
 		Redis   Redis
 		Swagger Swagger
 		JWT     JWT
+		OAuth   OAuth
 	}
 
 	App struct {
@@ -55,6 +56,16 @@ type (
 		Secret             string `env:"JWT_SECRET,required"`
 		AccessTokenExpiry  string `env:"JWT_ACCESS_TOKEN_EXPIRY" envDefault:"24h"`
 		RefreshTokenExpiry string `env:"JWT_REFRESH_TOKEN_EXPIRY" envDefault:"7d"`
+	}
+
+	OAuth struct {
+		Google GoogleOAuth `env:"OAUTH_GOOGLE"`
+	}
+
+	GoogleOAuth struct {
+		ClientID     string `env:"OAUTH_GOOGLE_CLIENT_ID,required"`
+		ClientSecret string `env:"OAUTH_GOOGLE_CLIENT_SECRET,required"`
+		RedirectURL  string `env:"OAUTH_GOOGLE_REDIRECT_URL,required"`
 	}
 )
 

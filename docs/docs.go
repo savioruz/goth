@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/users/login": {
-            "post": {
-                "description": "Login user",
+        "/auth/google/callback": {
+            "get": {
+                "description": "Handle the Google OAuth callback and return JWT tokens",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,7 +25,80 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "auth"
+                ],
+                "summary": "Google OAuth callback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization code from Google",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.Response-github_com_savioruz_goth_internal_dto_response_UserLoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/google/login": {
+            "get": {
+                "description": "Redirects to Google OAuth consent screen",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login with Google",
+                "responses": {
+                    "302": {
+                        "description": "Redirect to Google",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_savioruz_goth_internal_dto_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "description": "Login user with email and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
                 ],
                 "summary": "Login user",
                 "parameters": [
@@ -61,7 +134,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/profile": {
+        "/auth/profile": {
             "get": {
                 "security": [
                     {
@@ -76,7 +149,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "auth"
                 ],
                 "summary": "Get user profile",
                 "responses": {
@@ -95,9 +168,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/register": {
+        "/auth/register": {
             "post": {
-                "description": "Register new user",
+                "description": "Register new user with email and password",
                 "consumes": [
                     "application/json"
                 ],
@@ -105,7 +178,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "auth"
                 ],
                 "summary": "Register new user",
                 "parameters": [
@@ -151,7 +224,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "string@gmail.com"
                 },
                 "password": {
                     "type": "string",
@@ -168,7 +242,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "string@gmail.com"
                 },
                 "name": {
                     "type": "string"
