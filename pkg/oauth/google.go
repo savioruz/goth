@@ -1,10 +1,11 @@
 package oauth
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
+
+	"github.com/valyala/fasthttp"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -45,19 +46,19 @@ func (p *GoogleProvider) Exchange(code string) (*oauth2.Token, error) {
 }
 
 func (p *GoogleProvider) GetUserInfo(token *oauth2.Token) (*GoogleUserInfo, error) {
-	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+	req := fasthttp.AcquireRequest()
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseRequest(req)
+	defer fasthttp.ReleaseResponse(resp)
+
+	req.SetRequestURI("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+	err := fasthttp.Do(req, resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
-	}
 
 	var userInfo GoogleUserInfo
-	if err := json.Unmarshal(body, &userInfo); err != nil {
+	if err := json.Unmarshal(resp.Body(), &userInfo); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal user info: %w", err)
 	}
 
