@@ -49,6 +49,7 @@ func New(dsn string, opts ...Option) (*Postgres, error) {
 
 		log.Infof("postgres: trying to connect to database, attempts left: %d", pg.connAttempts)
 		time.Sleep(pg.connTimeout)
+
 		pg.connAttempts--
 	}
 
@@ -66,5 +67,9 @@ func (p *Postgres) Close() {
 }
 
 func (p *Postgres) Ping(ctx context.Context) error {
-	return p.Pool.Ping(ctx)
+	if err := p.Pool.Ping(ctx); err != nil {
+		return fmt.Errorf("postgres: ping failed: %w", err)
+	}
+
+	return nil
 }

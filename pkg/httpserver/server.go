@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -39,15 +40,16 @@ func New(opts ...Option) *Server {
 		opt(s)
 	}
 
-	app := fiber.New(fiber.Config{
-		Prefork:      false,
-		ReadTimeout:  s.readTimeout,
-		WriteTimeout: s.writeTimeout,
-		JSONDecoder:  json.Unmarshal,
-		JSONEncoder:  json.Marshal,
-	})
-
-	s.App = app
+	if s.App == nil {
+		s.App = fiber.New(fiber.Config{
+			Prefork:      false,
+			ReadTimeout:  s.readTimeout,
+			WriteTimeout: s.writeTimeout,
+			IdleTimeout:  s.shutdownTimeout,
+			JSONEncoder:  json.Marshal,
+			JSONDecoder:  json.Unmarshal,
+		})
+	}
 
 	return s
 }
@@ -64,5 +66,9 @@ func (s *Server) Notify() <-chan error {
 }
 
 func (s *Server) Shutdown() error {
-	return s.App.ShutdownWithTimeout(s.shutdownTimeout)
+	if err := s.App.ShutdownWithTimeout(s.shutdownTimeout); err != nil {
+		return fmt.Errorf("httpserver: shutdown error: %w", err)
+	}
+
+	return nil
 }

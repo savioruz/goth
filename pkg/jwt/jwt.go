@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -11,6 +12,9 @@ import (
 var (
 	instance *JWT
 	once     sync.Once
+
+	ErrJWTNotInitialized = errors.New("jwt: instance not initialized")
+	ErrInvalidToken      = errors.New("jwt: invalid token")
 )
 
 type JWT struct {
@@ -33,8 +37,9 @@ func Initialize(appName string, secretKey string, accessExpiry, refreshExpiry ti
 
 func GetInstance() *JWT {
 	if instance == nil {
-		panic(errors.New("jwt not initialized"))
+		_ = ErrJWTNotInitialized
 	}
+
 	return instance
 }
 
@@ -47,18 +52,18 @@ func GenerateRefreshToken(userID, email, level string) (string, error) {
 }
 
 func ValidateToken(tokenString string) (*Claims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(_ *jwt.Token) (interface{}, error) {
 		return []byte(GetInstance().secretKey), nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 		return claims, nil
 	}
 
-	return nil, errors.New("invalid token")
+	return nil, ErrInvalidToken
 }
 
 func (j *JWT) generateToken(userID, email, level string, expiry time.Duration, tokenType string) (string, error) {
@@ -77,5 +82,11 @@ func (j *JWT) generateToken(userID, email, level string, expiry time.Duration, t
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-	return token.SignedString([]byte(j.secretKey))
+
+	signedString, err := token.SignedString([]byte(j.secretKey))
+	if err != nil {
+		return "", fmt.Errorf("jwt: failed to sign token: %w", err)
+	}
+
+	return signedString, nil
 }

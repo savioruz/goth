@@ -5,13 +5,15 @@ import (
 	"github.com/gofiber/swagger"
 	"github.com/savioruz/goth/config"
 	_ "github.com/savioruz/goth/docs" // Swagger docs
+	authHandler "github.com/savioruz/goth/internal/domains/auth/handler"
+	oauthHandler "github.com/savioruz/goth/internal/domains/oauth/handler"
+	userHandler "github.com/savioruz/goth/internal/domains/user/handler"
 
 	"github.com/savioruz/goth/internal/delivery/http/middleware"
-	v1 "github.com/savioruz/goth/internal/delivery/http/v1"
-	"github.com/savioruz/goth/internal/service"
 	"github.com/savioruz/goth/pkg/logger"
 )
 
+// NewRouter initializes the HTTP router and registers the routes for the application.
 // Swagger spec:
 // @title       Goth API
 // @description This is a sample server Goth API.
@@ -21,7 +23,14 @@ import (
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-func NewRouter(app *fiber.App, cfg *config.Config, l logger.Interface, s service.Services) {
+func NewRouter(
+	app *fiber.App,
+	cfg *config.Config,
+	l logger.Interface,
+	authHandler *authHandler.Handler,
+	oauthHandler *oauthHandler.Handler,
+	userHandler *userHandler.Handler,
+) {
 	// Options
 	app.Use(middleware.Logger(l))
 	app.Use(middleware.Recovery(l))
@@ -33,7 +42,9 @@ func NewRouter(app *fiber.App, cfg *config.Config, l logger.Interface, s service
 
 	apiV1Group := app.Group("/v1")
 	{
-		v1.NewAuthRoutes(apiV1Group, l, s.AuthService, s.OAuthService)
+		authHandler.RegisterRoutes(apiV1Group)
+		oauthHandler.RegisterRoutes(apiV1Group)
+		userHandler.RegisterRoutes(apiV1Group)
 	}
 
 	app.Use("*", func(c *fiber.Ctx) error {

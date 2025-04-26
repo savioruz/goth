@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -29,7 +30,11 @@ func (r *Redis) Close() {
 }
 
 func (r *Redis) Ping(ctx context.Context) error {
-	return r.Client.Ping(ctx).Err()
+	if err := r.Client.Ping(ctx).Err(); err != nil {
+		return fmt.Errorf("redis: ping failed: %w", err)
+	}
+
+	return nil
 }
 
 func (r *Redis) Set(ctx context.Context, key string, value interface{}) error {
