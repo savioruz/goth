@@ -7,7 +7,7 @@ tmp_dir = ".build"
 
 [build]
 # Array of commands to run before each build
-#pre_cmd = ["swag init"]
+#pre_cmd = ["make generate"]
 # Just plain old shell command. You could use `make` as well.
 cmd = "go build -o ./.build/main ./cmd/app/main.go"
 # Array of commands to run after ^C

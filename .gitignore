@@ -1,11 +1,29 @@
-.env
+# Ignore IDE stuff
 .vscode/
 .idea/
+
+# Ignore executable files
 .build/
 .builder/
+.env
+
+# Ignore build artifacts
 node_modules/
 dist/
-coverage/
+tmp/
+bin/
+
+# Ignore mock files
+**/mock.go
+**/mock
+
+# Ignore generated files
+**gen.go
+
+# Ignore docs
+docs/
+
+# Ignore coverage reports
 *.log
 *.log.*
 *.log-*

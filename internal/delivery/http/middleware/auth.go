@@ -1,11 +1,11 @@
 package middleware
 
 import (
-	"fmt"
+	"github.com/savioruz/goth/pkg/failure"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/savioruz/goth/internal/dto/response"
+	"github.com/savioruz/goth/internal/delivery/http/response"
 	"github.com/savioruz/goth/pkg/jwt"
 )
 
@@ -13,21 +13,26 @@ func Jwt() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
-			return response.NewErrorResponse(c, fiber.StatusUnauthorized, response.ErrorMsg{"UNAUTHORIZED": {"authorization header not found"}})
+			err := failure.Unauthorized("missing authorization header")
+
+			return response.WithError(c, err)
 		}
 
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			return response.NewErrorResponse(c, fiber.StatusUnauthorized, response.ErrorMsg{"UNAUTHORIZED": {"invalid authorization header"}})
+			err := failure.Unauthorized("invalid authorization header format")
+
+			return response.WithError(c, err)
 		}
 
 		claims, err := jwt.ValidateToken(parts[1])
 		if err != nil {
-			return response.NewErrorResponse(c, fiber.StatusUnauthorized, response.ErrorMsg{"UNAUTHORIZED": {"invalid token"}})
+			err := failure.Unauthorized("invalid token")
+
+			return response.WithError(c, err)
 		}
 
 		if claims != nil {
-			fmt.Printf("JWT Claims: %+v\n", claims)
 			c.Locals("user_id", claims.ID)
 			c.Locals("email", claims.Email)
 			c.Locals("level", claims.Level)

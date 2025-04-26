@@ -42,17 +42,24 @@ func (p *GoogleProvider) GetAuthURL() string {
 }
 
 func (p *GoogleProvider) Exchange(code string) (*oauth2.Token, error) {
-	return p.config.Exchange(context.Background(), code)
+	token, err := p.config.Exchange(context.Background(), code)
+	if err != nil {
+		return nil, fmt.Errorf("failed to exchange authorization code: %w", err)
+	}
+
+	return token, nil
 }
 
 func (p *GoogleProvider) GetUserInfo(token *oauth2.Token) (*GoogleUserInfo, error) {
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
+
 	defer fasthttp.ReleaseRequest(req)
 	defer fasthttp.ReleaseResponse(resp)
 
 	req.SetRequestURI("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 	err := fasthttp.Do(req, resp)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}

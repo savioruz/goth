@@ -3,9 +3,17 @@ package httpserver
 import (
 	"net"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type Option func(*Server)
+
+func App(app *fiber.App) Option {
+	return func(s *Server) {
+		s.App = app
+	}
+}
 
 func Port(port string) Option {
 	return func(s *Server) {
