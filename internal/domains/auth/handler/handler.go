@@ -102,7 +102,7 @@ func (h *Handler) Login(ctx *fiber.Ctx) error {
 			reqID = id
 		}
 
-		h.logger.Error("http - auth - register - request_id: " + reqID + " - " + err.Error())
+		h.logger.Error("http - auth - login - request_id: " + reqID + " - " + err.Error())
 
 		return response.WithError(ctx, err)
 	}
