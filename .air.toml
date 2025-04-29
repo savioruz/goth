@@ -21,7 +21,7 @@ args_bin = []
 # Watch these filename extensions.
 include_ext = ["go", "tpl", ".buildl", "html", ".env"]
 # Ignore these filename extensions or directories.
-exclude_dir = ["assets", ".build", "vendor", "template/node_modules", "test"]
+exclude_dir = ["assets", ".build", "vendor", "template/node_modules", "test", "docs"]
 # Watch these directories if you specified.
 include_dir = []
 # Watch these files.

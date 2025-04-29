@@ -4,8 +4,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate mockgen -source=google_provider.go -destination=mock/google_mock.go -package=mock github.com/savioruz/goth/pkg/oauth Interface
-
 // GoogleProviderIface defines the methods that a GoogleProvider must implement
 type GoogleProviderIface interface {
 	GetAuthURL() string
