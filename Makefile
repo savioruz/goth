@@ -92,7 +92,7 @@ lint: ### check by golangci linter
 	$(LOCAL_BIN)/golangci-lint run
 .PHONY: linter-golangci
 
-test: generate ### run test
+test: generate generate.mock ### run test
 	@if ! -d ./tmp ]; then \
 		mkdir -p ./tmp; \
 	fi
