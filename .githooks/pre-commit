@@ -1,3 +1,6 @@
-!/bin/sh
+#!/bin/sh
+set -e
 
+echo "Running pre-commit checks..."
 make lint
+echo "Pre-commit checks passed!"

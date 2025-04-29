@@ -15,12 +15,8 @@ deps: ### deps tidy + verify
 deps.bin: ### install tools (mandatory for development)
 	GOBIN=$(LOCAL_BIN) go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 	GOBIN=$(LOCAL_BIN) go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-	GOBIN=$(LOCAL_BIN) go install go.uber.org/mock/mockgen@latest
-	GOBIN=$(LOCAL_BIN) go install github.com/swaggo/swag/cmd/swag@latest
 	GOBIN=$(LOCAL_BIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	GOBIN=$(LOCAL_BIN) go install github.com/air-verse/air@latest
 	GOBIN=$(LOCAL_BIN) go install golang.org/x/vuln/cmd/govulncheck@latest
-	GOBIN=$(LOCAL_BIN) go install github.com/google/wire/cmd/wire@latest
 .PHONY: deps.bin
 
 deps.audit: ### check dependencies vulnerabilities
@@ -64,7 +60,7 @@ generate.sqlc: ### domains=$DOMAIN (generate sqlc code)
 .PHONY: generate.sqlc
 
 generate.swag: ### generate swagger docs
-	$(LOCAL_BIN)/swag init --parseDependency --parseInternal --parseDepth=2 -g ./internal/delivery/http/router.go
+	go run github.com/swaggo/swag/cmd/swag init -g ./internal/delivery/http/router.go
 .PHONY: generate.swag
 
 generate.mock: ### generate mock
@@ -77,26 +73,26 @@ generate.mock: ### generate mock
 					echo "$$f" | while read file; do \
 						if [ -n "$$file" ]; then \
 							dest_file="./internal/domains/$$domain/mock/$$(basename $${file%.*})_mock.go"; \
-							$(LOCAL_BIN)/mockgen -source="$$file" -destination="$$dest_file" -package=mock || echo "    ERROR: Failed to generate mock for $$file"; \
+							go run go.uber.org/mock/mockgen -source="$$file" -destination="$$dest_file" -package=mock || echo "    ERROR: Failed to generate mock for $$file"; \
 						fi \
 					done; \
 				fi; \
 			fi; \
 		done; \
 	done
-	go generate ./pkg/...
+	go generate -run="mockgen" ./pkg/...
 	@echo "Mock generation completed"
 .PHONY: generate.mock
 
-generate: generate.swag generate.mock ### generate code
-	cd ./internal/app && go generate ./... && wire ./wire.go
+generate: ### generate code
+	go generate ./...
 .PHONY: generate
 
 lint: ### check by golangci linter
 	$(LOCAL_BIN)/golangci-lint run
 .PHONY: linter-golangci
 
-test: generate ### run test
+test: generate generate.mock ### run test
 	@if ! -d ./tmp ]; then \
 		mkdir -p ./tmp; \
 	fi
@@ -107,14 +103,15 @@ coverage: ### show coverage
 	go tool cover -html=tmp/coverage.txt
 
 dev: generate ### Run dev
-	$(LOCAL_BIN)/air -c ./.air.toml
+	go run github.com/air-verse/air -c ./.air.toml
 .PHONY: dev
 
-run: deps swag-v1 ### swag run for API v1
-	go mod download && \
-	CGO_ENABLED=0 go run -tags migrate ./cmd/app
-.PHONY: run
-
 clean: ### clean
-	rm -rf ./bin ./tmp ./test/mock ./test/coverage.txt ./test/coverage.html
+	@rm -rf ./bin ./tmp ./docs
+	@for domain in $$(find ./internal/domains -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do \
+		rm -rf ./internal/domains/$$domain/mock; \
+	done
+	@for pkg in $$(find ./pkg -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do \
+		rm -rf ./pkg/$$pkg/mock; \
+	done
 .PHONY: clean

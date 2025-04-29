@@ -10,6 +10,8 @@ import (
 	"github.com/savioruz/goth/config"
 )
 
+//go:generate go run github.com/google/wire/cmd/wire
+
 func Run(cfg *config.Config) {
 	app, err := InitializeApp(cfg)
 	if err != nil {
