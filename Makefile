@@ -64,12 +64,27 @@ generate.swag: ### generate swagger docs
 .PHONY: generate.swag
 
 generate.mock: ### generate mock
-	go generate -run="mockgen" ./internal/...
+	@for domain in $$(find ./internal/domains -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do \
+		mkdir -p ./internal/domains/$$domain/mock; \
+		for dir in repository service; do \
+			if [ -d "./internal/domains/$$domain/$$dir" ]; then \
+				f=$$(find "./internal/domains/$$domain/$$dir" -name "*.go" -not -path "*/mock/*" -type f | xargs grep -l "type.*interface\|type.*Interface" 2>/dev/null || true); \
+				if [ -n "$$f" ]; then \
+					echo "$$f" | while read file; do \
+						if [ -n "$$file" ]; then \
+							dest_file="./internal/domains/$$domain/mock/$$(basename $${file%.*})_mock.go"; \
+							go run go.uber.org/mock/mockgen -source="$$file" -destination="$$dest_file" -package=mock || echo "    ERROR: Failed to generate mock for $$file"; \
+						fi \
+					done; \
+				fi; \
+			fi; \
+		done; \
+	done
 	go generate -run="mockgen" ./pkg/...
 	@echo "Mock generation completed"
 .PHONY: generate.mock
 
-generate: generate.mock ### generate code
+generate: ### generate code
 	go generate ./...
 .PHONY: generate
 
