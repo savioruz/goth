@@ -2,5 +2,7 @@
 set -e
 
 echo "Running pre-commit checks..."
+make generate
+make deps.audit
 make lint
 echo "Pre-commit checks passed!"
