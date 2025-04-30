@@ -22,7 +22,7 @@ type Handler struct {
 	logger  logger.Interface
 }
 
-func NewHandler(s service.UserService, l logger.Interface) *Handler {
+func New(s service.UserService, l logger.Interface) *Handler {
 	return &Handler{
 		service: s,
 		logger:  l,
