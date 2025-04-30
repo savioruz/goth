@@ -56,7 +56,7 @@ func InitializeApp(cfg *config.Config) (*Application, error) {
 
 		// Handler providers
 		authHandler.NewHandler,
-		oauthHandler.NewHandler,
+		oauthHandler.New,
 		userHandler.New,
 
 		// HTTP server
