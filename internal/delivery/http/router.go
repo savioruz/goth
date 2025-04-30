@@ -15,8 +15,8 @@ import (
 
 // NewRouter initializes the HTTP router and registers the routes for the application.
 // Swagger spec:
-// @title       Goth API
-// @BasePath    /v1
+// @title Goth API
+// @BasePath /v1
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
