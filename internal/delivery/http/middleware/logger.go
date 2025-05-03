@@ -3,6 +3,7 @@ package middleware
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/savioruz/goth/pkg/logger"
@@ -26,9 +27,13 @@ func buildRequestMessage(ctx *fiber.Ctx) string {
 
 func Logger(l logger.Interface) func(c *fiber.Ctx) error {
 	return func(ctx *fiber.Ctx) error {
+		start := time.Now()
+
 		err := ctx.Next()
 
-		l.Info(buildRequestMessage(ctx))
+		duration := time.Since(start).Milliseconds()
+
+		l.Info(buildRequestMessage(ctx) + " - " + strconv.FormatInt(duration, 10) + "ms")
 
 		return err
 	}

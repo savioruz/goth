@@ -43,6 +43,7 @@ func InitializeApp(cfg *config.Config) (*Application, error) {
 		providePgxIface,
 		provideValidator,
 		provideRedis,
+		provideRedisCache,
 		provideJWT,
 		provideGoogleOAuth,
 
@@ -120,6 +121,10 @@ func providePgxIface(pg *postgres.Postgres) postgres.PgxIface {
 func provideRedis(cfg *config.Config) (*redis.Redis, error) {
 	addr := fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port)
 	return redis.New(addr, cfg.Redis.Password, cfg.Redis.DB)
+}
+
+func provideRedisCache(r *redis.Redis, l logger.Interface) redis.IRedisCache {
+	return redis.NewRedisCache(r.Client, l)
 }
 
 func provideValidator() *validator.Validate {
