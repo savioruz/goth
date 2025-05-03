@@ -2,13 +2,13 @@ package config
 
 import (
 	"fmt"
-
 	"github.com/caarlos0/env/v11"
 )
 
 type (
 	Config struct {
 		App     App
+		Cache   Cache
 		HTTP    HTTP
 		Log     Log
 		Pg      Pg
@@ -21,6 +21,10 @@ type (
 	App struct {
 		Name    string `env:"APP_NAME,required"`
 		Version string `env:"APP_VERSION,required"`
+	}
+
+	Cache struct {
+		Duration int `env:"CACHE_DURATIONS,required"`
 	}
 
 	HTTP struct {

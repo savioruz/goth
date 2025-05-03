@@ -32,10 +32,19 @@ func (u *UserLoginResponse) ToLoginResponse(accessToken, refreshToken string) *U
 	}
 }
 
-func (u *UserProfileResponse) ToProfileResponse(user repository.User) *UserProfileResponse {
-	return &UserProfileResponse{
+func (u UserProfileResponse) ToProfileResponse(user repository.User) UserProfileResponse {
+	var name, profileImage string
+	if user.FullName.Valid {
+		name = user.FullName.String
+	}
+
+	if user.ProfileImage.Valid {
+		profileImage = user.ProfileImage.String
+	}
+
+	return UserProfileResponse{
 		Email:        user.Email,
-		Name:         user.FullName.String,
-		ProfileImage: user.ProfileImage.String,
+		Name:         name,
+		ProfileImage: profileImage,
 	}
 }

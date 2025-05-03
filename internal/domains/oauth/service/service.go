@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/jackc/pgx/v5"
 	"github.com/savioruz/goth/pkg/failure"
 	"github.com/savioruz/goth/pkg/logger"
@@ -63,12 +64,12 @@ func (s *oauthService) HandleGoogleCallback(ctx context.Context, code string) (r
 
 	defer func(tx pgx.Tx, ctx context.Context) {
 		err := tx.Rollback(ctx)
-		if err != nil {
+		if err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 			s.logger.Error("google callback - service - failed to rollback transaction: %w", err)
 		}
 	}(tx, ctx)
 
-	// Check if user exists
+	// Check if a user exists
 	user, err := s.repo.GetUserByEmail(ctx, tx, userInfo.Email)
 	if err != nil {
 		params := repository.CreateUserParams{
