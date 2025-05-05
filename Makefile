@@ -51,12 +51,15 @@ generate.domains: ### domains=$DOMAIN (generate domains including sqlc.yaml)
 		@echo "Domain structure created at ./internal/domains/$(domains) and sqlc.yaml at $(DB_PATH)/domains/$(domains)"
 .PHONY: generate.domains
 
-generate.sqlc: ### domains=$DOMAIN (generate sqlc code)
-	@if [ -z "$(domains)" ]; then \
-		echo "Please set the domains variable"; \
-		exit 1; \
-	fi
-	$(LOCAL_BIN)/sqlc generate --file $(DB_PATH)/domains/$(domains)/sqlc.yaml
+generate.sqlc: ### generate sqlc code
+	@for domain in $$(find $(DB_PATH)/domains -mindepth 1 -maxdepth 1 -type d -exec basename {} \;); do \
+		if [ -f "$$(find $(DB_PATH)/domains/$$domain -name sqlc.yaml)" ]; then \
+			echo "Generating sqlc for domain $$domain"; \
+			go run github.com/sqlc-dev/sqlc/cmd/sqlc generate -f "$$(find $(DB_PATH)/domains/$$domain -name sqlc.yaml)"; \
+		else \
+			echo "No sqlc.yaml found for domain $$domain"; \
+		fi; \
+	done
 .PHONY: generate.sqlc
 
 generate.swag: ### generate swagger docs
@@ -84,7 +87,7 @@ generate.mock: ### generate mock
 	@echo "Mock generation completed"
 .PHONY: generate.mock
 
-generate: ### generate code
+generate: generate.sqlc ### generate code
 	go generate ./...
 .PHONY: generate
 

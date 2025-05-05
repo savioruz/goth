@@ -20,6 +20,9 @@ bin/
 # Ignore generated files
 **gen.go
 
+# Ignore repository because it generated
+repository/
+
 # Ignore docs
 docs/
 
