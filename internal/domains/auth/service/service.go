@@ -43,7 +43,7 @@ func (s *authService) Register(ctx context.Context, req dto.UserRegisterRequest)
 	}
 	defer func(tx pgx.Tx, ctx context.Context) {
 		err := tx.Rollback(ctx)
-		if err != nil {
+		if err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 			s.logger.Error("register - service - failed to rollback transaction: %w", err)
 		}
 	}(tx, ctx)
@@ -110,7 +110,7 @@ func (s *authService) Login(ctx context.Context, req dto.UserLoginRequest) (*dto
 	}
 	defer func(tx pgx.Tx, ctx context.Context) {
 		err := tx.Rollback(ctx)
-		if err != nil {
+		if err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 			s.logger.Error("login - service - failed to rollback transaction: %w", err)
 		}
 	}(tx, ctx)

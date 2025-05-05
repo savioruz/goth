@@ -22,7 +22,7 @@ type Handler struct {
 	validator *validator.Validate
 }
 
-func NewHandler(s service.OAuthService, l logger.Interface, v *validator.Validate) *Handler {
+func New(s service.OAuthService, l logger.Interface, v *validator.Validate) *Handler {
 	return &Handler{
 		service:   s,
 		logger:    l,

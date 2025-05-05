@@ -15,7 +15,7 @@ type Handler struct {
 	validator *validator.Validate
 }
 
-func NewHandler(s service.AuthService, l logger.Interface, v *validator.Validate) *Handler {
+func New(s service.AuthService, l logger.Interface, v *validator.Validate) *Handler {
 	return &Handler{
 		service:   s,
 		logger:    l,
