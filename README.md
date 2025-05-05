@@ -49,6 +49,12 @@ cp .env.example .env
 docker compose up -d
 ```
 
+4. Run the migrations:
+
+```bash
+make migrate.up
+```
+
 ### Dev
 
 For development, you can use Air for hot reloading:
